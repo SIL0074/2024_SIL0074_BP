@@ -70,6 +70,10 @@ String serverIP;
 AsyncWebServer server(80);
 
 
+// Variables to store received IR codes
+uint8_t buffer[2] = {0, 0};
+int bufferID = 0;
+
 //Definice režimů
 
 //Módy enkódéru
@@ -574,6 +578,7 @@ void handleButton() {
 }
 
 
+
 //Funkce pro chování IR diody
 void IROvladac() {
   if (irrecv.decode(&decod_prij)) {
@@ -636,6 +641,48 @@ if (decod_prij.value == 0xFF38C7) { //tlačitko "OK"
       }
       toggle = !toggle; // přepnutí stavu
     }
+
+        if (decod_prij.value == 0xFF9867) {
+          buffer[bufferID++] = 0;
+        }
+        else if (decod_prij.value == 0XFFA25D) {
+          buffer[bufferID++] = 1;
+        }
+        else if (decod_prij.value == 0xFF629D) {
+          buffer[bufferID++] = 2;
+        }
+        else if (decod_prij.value == 0xFFE21D) {
+          buffer[bufferID++] = 3;
+        }
+        else if (decod_prij.value == 0xFF22DD) {
+          buffer[bufferID++] = 4;
+        }
+        else if (decod_prij.value == 0xFF02FD) {
+          buffer[bufferID++] = 5;
+        }
+
+        else if (decod_prij.value == 0xFFC23D) {
+          buffer[bufferID++] = 6;
+        }
+
+        else if (decod_prij.value == 0xFFE01F) {
+          buffer[bufferID++] = 7;
+        }
+
+        else if (decod_prij.value == 0xFFA857) {
+          buffer[bufferID++] = 8;
+        }
+        
+        else if (decod_prij.value == 0xFF906F) {
+          buffer[bufferID++] = 9;
+        }
+
+        if (bufferID == 2) {
+          int buffSta = buffer[0] * 10 + buffer[1];
+          if(buffSta <= pocet_stanic && buffSta > 0)
+          {ID_stanice = buffSta;}          
+          bufferID = 0; 
+        }
 
     break;
 
@@ -885,7 +932,13 @@ webclient.print(String("GET ") + cesta + " HTTP/1.1\r\n" + "Host: " + host + "\r
 preferences.begin("radio", true); //Získání hodnot z sharedPrefs
 Volume = preferences.getInt("Volume", Volume);
 VolumeBT = preferences.getInt("VolumeBT", VolumeBT);
+if(ID_stanice<= pocet_stanic){
 ID_stanice = preferences.getInt("ID_stanice", ID_stanice);
+}
+else {
+  ID_stanice = 1;
+}
+
 preferences.end();
 lcd.clear(); //Čistka displeje
 }
@@ -893,7 +946,8 @@ lcd.clear(); //Čistka displeje
 
 //Hlavní smyčka programu
 void loop()
-{
+{  
+
 switch(server_vych_mod){//Přepínání mezi RADIO a SERVER režimem
   case RADIO:
 
@@ -982,8 +1036,8 @@ stream_prehravac.setVolume(Volume);
         case 2:
         
            nazev = "Evropa 2"; 
-           host= "ice.actve.net";          
-           cesta= "/fm-evropa2-128";
+           host= "25433.live.streamtheworld.com";          
+           cesta= "/EVROPA2.mp3";
            nar ="CZ";
            break;
 
@@ -1164,9 +1218,9 @@ nar ="ES";
 nar ="ES";
   break;
   case 29:
-          nazev = "MR 1 Kossuth Radio"; 
-           host= "maxxima.mine.nu";          
-           cesta= "/mr1.mp3";
+          nazev = "RadiR Dikh"; 
+           host= "icast.connectmedia.hu";          
+           cesta= "/6121/live.mp3";
 nar ="HU";
   break;
   case 30:
