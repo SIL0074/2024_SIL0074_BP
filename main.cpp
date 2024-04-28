@@ -70,7 +70,6 @@ String serverIP;
 AsyncWebServer server(80);
 
 
-// Variables to store received IR codes
 uint8_t buffer[2] = {0, 0};
 int bufferID = 0;
 
@@ -1224,10 +1223,10 @@ nar ="ES";
 nar ="HU";
   break;
   case 30:
-          nazev = "Best FM"; 
-           host= "icast.connectmedia.hu";          
-           cesta= "/5113/live.mp3";
-nar ="HU";
+          nazev = "Club Radio"; 
+           host= "icecast2.play.cz";          
+           cesta= "/Clubradio.mp3";
+nar ="CZ";
   break;
      }
             
