@@ -15,6 +15,7 @@
 #include <Adafruit_VS1053.h>
 #include <VS1053.h>                 
 #include <RotaryEncoder.h>
+#include <NTPClient.h>
 
 
 //Definování pinů
@@ -40,7 +41,7 @@
 #define CLK_PIN 14    
 
 //Název zařízení v Bluetooth režimu
-#define BT_NAME "ESP32 RADIO"
+#define BT_NAME "BT RECEIVER"
 
 //Velikost bufferu (vyrovnávací paměti) pro knihovnu Adafruit_VS1053.h - režim Bluetooth
 #define BUFFSIZE 32 
@@ -107,9 +108,12 @@ enk_mod enk_vych_mod = enkoder_hlasitost;
 char ssid[] = "projekt";   
 char pass[] = "projekt1"; 
 
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP);
+
 //Vstupní údaje pro přístup k serveru (jakmile se spustí - objeví se jeho IP na displeji spolu s nápisem SERVER REZIM)
-char server_ssid[] = "esp";
-char server_heslo[] = "esp32test";
+char server_ssid[] = "radio";
+char server_heslo[] = "radio";
 
 //Definice pole mp3buff o velikosti BUFFSIZE 
 uint8_t mp3buff[BUFFSIZE];
@@ -195,6 +199,8 @@ WiFiClient webclient;
 //Konstruktory pro infračervenou diodu
 IRrecv irrecv(IR_REC);
 decode_results decod_prij;
+
+
 
 String Scroll_displeje(String LCD_text){
   String LCD_hot;
@@ -396,6 +402,7 @@ void getPoz()
 }
 
 
+
 //Funkce pro detekci příkazů v serialu
 void Prikazy() {
   if (Serial.available() > 0) {
@@ -429,14 +436,24 @@ void Prikazy() {
     }
     else if (command == "restart") {
       //Restart ESP
-      Serial.print("Restart za 2s!!!"); 
+      Serial.print("Restart za 2s!!!");
+       lcd.setCursor(0,1);
+      lcd.print("                "); 
+      lcd.setCursor(0,0);
+      lcd.print("                ");
+      lcd.print("Restart"); 
       delay(2000);
       ESP.restart();
     }
     
     else if (command == "restartFull"){
       //Kompletní restart s resetem hodnot
-      Serial.print("Úplný restart za 2s!!!"); 
+      Serial.print("Úplný restart za 2s!!!");
+      lcd.setCursor(0,1);
+      lcd.print("                "); 
+      lcd.setCursor(0,0);
+      lcd.print("                ");
+      lcd.print("Uplny restart");
       resetHodnot();
       delay(2000);
       ESP.restart();
@@ -452,6 +469,11 @@ void Prikazy() {
       //Restart ESP s nahráním testovacích hodnot
       Serial.print("Úplný restart za 2s!!!"); 
       resetTest();
+       lcd.setCursor(0,1);
+      lcd.print("                "); 
+      lcd.setCursor(0,0);
+      lcd.print("                ");
+      lcd.print("Test restart");
       delay(2000);
       ESP.restart();
     } 
@@ -676,12 +698,16 @@ if (decod_prij.value == 0xFF38C7) { //tlačitko "OK"
           buffer[bufferID++] = 9;
         }
 
+        
+
         if (bufferID == 2) {
           int buffSta = buffer[0] * 10 + buffer[1];
           if(buffSta <= pocet_stanic && buffSta > 0)
           {ID_stanice = buffSta;}          
           bufferID = 0; 
         }
+
+             
 
     break;
 
@@ -918,8 +944,11 @@ Serial.println("Chyba připojení!");
     Serial.println("Spojení s WiFi úspěšně navázáno");
   }
 
+timeClient.begin();
+  timeClient.setTimeOffset(7200);
+
   //Zprovoznění OTA
-  ArduinoOTA.setHostname("ESP32");
+  ArduinoOTA.setHostname("Internet radio");
   //ArduinoOTA.setPassword("SIL0074"); //možnost nastavení hesla
   ArduinoOTA.begin();
 
@@ -959,25 +988,30 @@ if (Obnova >= 450){//Po kolika cyklech se má obnovit LCD
 
   Obnova = 0; //Reset
 
+  timeClient.update();
+  lcd.setCursor(5, 1);
+  String formCas = timeClient.getFormattedTime();
+  formCas.remove(5);
+  lcd.print(formCas);
   
-  String nazevCely =  nazev + "|" + nar + "|" + ID_stanice;
+  String nazevCely =  nazev + "|" + nar;
   lcd.setCursor(0, 0);
   String pohybText = Scroll_displeje(nazevCely);
   lcd.print(pohybText); //vypsání infa o stanici na první řádek LCD
-  
+  lcd.setCursor(0,1);
+  lcd.print(ID_stanice);
   
   int mapVolume = map(Volume, 30, 100, 1, 100); //Namapování hodnot u WiFi hlasitosti
               
  if (Volume != predVolume) {
-                lcd.setCursor(0, 1);
-                lcd.print("               "); //Smazání druhého řádku LCD displeje
-                lcd.setCursor(0, 1);
+                lcd.setCursor(12, 1);
+                lcd.print("   "); //Smazání druhého řádku LCD displeje
+                lcd.setCursor(12, 1);
                 if (Volume < 30){
-                  lcd.print("Zvuk vypnut");//vypsání na druhý řádek LCD
+                  lcd.print("VYP");//vypsání na druhý řádek LCD
                 }
                 else{
-                lcd.print("Hlasitost: ");//vypsání na druhý řádek LCD
-                lcd.print(mapVolume);
+                lcd.print(mapVolume);//vypsání na druhý řádek LCD
                 lcd.print ("%");
                 }
                 //aktualizace hlasitosti
@@ -985,13 +1019,12 @@ if (Obnova >= 450){//Po kolika cyklech se má obnovit LCD
             }
 
             else{
-              lcd.setCursor(0, 1);
+              lcd.setCursor(12, 1);
               if (Volume < 30){
-                  lcd.print("Zvuk vypnut"); //vypsání na druhý řádek LCD
+                  lcd.print("VYP"); //vypsání na druhý řádek LCD
                 }
                 else{
-                lcd.print("Hlasitost: ");//vypsání na druhý řádek LCD
-                lcd.print(mapVolume);
+                lcd.print(mapVolume);//vypsání na druhý řádek LCD
                 lcd.print ("%");
                 }
             }
@@ -1217,16 +1250,16 @@ nar ="ES";
 nar ="ES";
   break;
   case 29:
-          nazev = "RadiR Dikh"; 
-           host= "icast.connectmedia.hu";          
-           cesta= "/6121/live.mp3";
-nar ="HU";
+          nazev = "Russkoe Radio"; 
+           host= "rusradio.hostingradio.ru";          
+           cesta= "/rusradio128-f.mp3";
+nar ="RU";
   break;
   case 30:
-          nazev = "Club Radio"; 
-           host= "icecast2.play.cz";          
-           cesta= "/Clubradio.mp3";
-nar ="CZ";
+          nazev = "Sverige Radio P1"; 
+           host= "http-live.sr.se";          
+           cesta= "/p1-mp3-192";
+nar ="SE";
   break;
      }
             
@@ -1265,16 +1298,15 @@ int mapVolumeBT = map(VolumeBT, 1, 100, 100, 1);
 if (mapVolumeBT == 0 || VolumeBT == 254){
     lcd.clear();
   lcd.setCursor(0, 0);
- lcd.print("BLUETOOTH");//Výpis na LCD displej
- lcd.setCursor(0,1); 
-    lcd.print("Zvuk vypnut"); //Výpis na LCD displej            
+ lcd.print("BLUETOOTH REZIM");//Výpis na LCD displej
+ lcd.setCursor(12,1); 
+    lcd.print("VYP"); //Výpis na LCD displej            
 }
 else {
   lcd.clear();
  lcd.setCursor(0, 0);
- lcd.print("BLUETOOTH");//Výpis na LCD displej
- lcd.setCursor(0,1); 
- lcd.print("Hlasitost: ");//Výpis na LCD displej
+ lcd.print("BLUETOOTH REZIM");//Výpis na LCD displej
+ lcd.setCursor(12,1); 
  lcd.print (mapVolumeBT);
  lcd.print ("%");
 }}
@@ -1322,7 +1354,7 @@ preferences.begin("radio", false); // Uložení hodnot do shared prefs
   Serial.println("IP VYPSANA");
   IPdone = true; 
 }
-
+ArduinoOTA.handle();
 Prikazy(); //Detekce příkazů v server režimu
   break;
 }
