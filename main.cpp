@@ -112,8 +112,8 @@ WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP);
 
 //Vstupní údaje pro přístup k serveru (jakmile se spustí - objeví se jeho IP na displeji spolu s nápisem SERVER REZIM)
-char server_ssid[] = "radio";
-char server_heslo[] = "radio";
+char server_ssid[] = "Internet Radio Player";
+char server_heslo[] = "player123";
 
 //Definice pole mp3buff o velikosti BUFFSIZE 
 uint8_t mp3buff[BUFFSIZE];
@@ -864,7 +864,7 @@ attachInterrupt(digitalPinToInterrupt(CLK_PIN), getPoz, CHANGE);
  
  
  lcd.setCursor(0,1);
- lcd.print("Start radia");
+ lcd.print("Spousteni...");
  
  Serial.println("Startuji");  
 
