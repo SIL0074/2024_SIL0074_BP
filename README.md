@@ -1,4 +1,4 @@
-# WiFi Internet Radio Player 🇨🇿 🇸🇰
+# Přehrávač internetového rádia využívající technologii WiFi 🇨🇿 🇸🇰
 
 Tento repozitář obsahuje zdrojové kódy k bakalářské práci, která se zabývá návrhem a konstrukcí zařízení pro přehrávání internetových rádií pomocí modulu ESP32 s integrovanou WiFi technologií.
 
@@ -25,7 +25,7 @@ Bc. Pavel Šiller (2024)
 
 ---
 
-# WiFi Internet Radio Player 🇬🇧 🇺🇸
+# Internet Radio Player Using WiFi Technology 🇬🇧 🇺🇸
 
 This repository contains the source code for a bachelor’s thesis focused on the design and construction of a device for playing internet radios using the ESP32 module with integrated WiFi technology.
 
